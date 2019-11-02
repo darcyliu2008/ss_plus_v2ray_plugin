@@ -1,0 +1,28 @@
+{
+  "name": "SS + Plugin ",
+  "description": "在Heroku部署SS和V2Ray plugin (是V2Ray",
+  "keywords": ["Shadowsocks", "V2Ray-plugin"],
+  "env": {
+    "ENCRYPT": {
+      "description": "加密方式，默认'aes-128-gcm'。可选'chacha20-ietf-poly1305','aes-256-gcm','aes-192-gcm'等加密协议’xchacha‘有待考察v2ray plugin是否支持",
+      "value": "aes-128-gcm"
+    },
+    "PASSWORD": {
+      "description": "shadowsocks的密码，请使用强密码19位以上包含特殊字符",
+      "value": "changeYourPassPhraseHere"
+    },
+
+    "VER": {
+      "description": "v2ray-plugin版本，默认latest安装最新版本，可以去https://github.com/shadowsocks/v2ray-plugin/releasesV2Ray选择版本 （例如：1.1.0)",
+      "value": "latest"
+    },
+
+    "V2_Path": {
+      "description": "Path路径，默认/shadow，斜杆不能少。",
+      "value": "/shadow"
+    }
+  },
+  "website": "",
+  "repository": "",
+  "stack": "container"
+}
