@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 #v2ray-plugin版本
 if [[ -z "${VER}" ]]; then
@@ -24,7 +24,8 @@ echo ${V2_Path}
 
 
 if [ "$VER" = "latest" ]; then
-  V_VER=`wget -qO- "https://api.github.com/repos/shadowsocks/v2ray-plugin/releases/latest" | grep 'tag_name' | cut -d\" -f4`
+  V_VER=`wget -qO- "https://api.github.com/repos/shadowsocks/v2ray-plugin/releases/latest" | sed -n -r -e 's/.*"tag_name".+?"([vV0-9\.]+?)".*/\1/p'`
+  [[ -z "${V_VER}" ]] && V_VER="v1.3.0"
 else
   V_VER="v$VER"
 fi
@@ -40,54 +41,28 @@ mv v2ray-plugin_linux_amd64 /usr/bin/v2ray-plugin
 rm -rf /v2raybin
 
 
-C_VER=`wget -qO- "https://api.github.com/repos/mholt/caddy/releases/latest" | grep 'tag_name' | cut -d\" -f4`
-mkdir /caddybin
-cd /caddybin
-CADDY_URL="https://github.com/mholt/caddy/releases/download/$C_VER/caddy_${C_VER}_linux_amd64.tar.gz"
-echo ${CADDY_URL}
-wget --no-check-certificate -qO 'caddy.tar.gz' ${CADDY_URL}
-tar xvf caddy.tar.gz
-rm -rf caddy.tar.gz
-chmod +x caddy
-
-
 if [ ! -d /etc/shadowsocks-libev ]; then  
 　　mkdir /etc/shadowsocks-libev
 fi
-cat <<-EOF > /etc/shadowsocks-libev/config.json
-{
-    "server":"127.0.0.1",
-    "server_port":"10000",
-    "password":"${PASSWORD}",
-    "timeout":300,
-    "method":"${ENCRYPT}",
-    "mode": "tcp_and_udp",
-    "fast_open":false,
-    "reuse_port":true,
-    "no_delay":true,
-    "plugin": "/usr/bin/v2ray-plugin",
-    "plugin_opts":"server;path=${V2_Path}"
-}
-EOF
+
+sed -e "/^#/d"\
+    -e "s/\${PASSWORD}/${PASSWORD}/g"\
+    -e "s/\${ENCRYPT}/${ENCRYPT}/g"\
+    -e "s|\${V2_Path}|${V2_Path}|g"\
+    /conf/libev_conf.json >  /etc/shadowsocks-libev/config.json
 
 echo /etc/shadowsocks-libev/config.json
 cat /etc/shadowsocks-libev/config.json
 
-cat <<-EOF > /caddybin/Caddyfile
-http://0.0.0.0:${PORT}
-{
-	root /wwwroot
-	index index.html
-	timeouts none
-	proxy ${V2_Path} localhost:10000 {
-		websocket
-		header_upstream -Origin
-    transparent
-	}
-}
-EOF
-
+sed -e "/^#/d"\
+    -e "s/\${PORT}/${PORT}/g"\
+    -e "s|\${V2_Path}|${V2_Path}|g"\
+    -e "s|\${QR_Path}|${QR_Path}|g"\
+    -e "$s"\
+    /conf/nginx_heroku.conf > /etc/nginx/conf.d/nginx_heroku.conf
+echo /etc/nginx/conf.d/nginx_heroku.conf
+cat /etc/nginx/conf.d/nginx_heroku.conf
 
 ss-server -c /etc/shadowsocks-libev/config.json &
-cd /caddybin
-./caddy -conf="/caddybin/Caddyfile"
+rm -rf /etc/nginx/sites-enabled/default
+nginx -g 'daemon off;'
