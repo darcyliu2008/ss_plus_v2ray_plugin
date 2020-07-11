@@ -6,8 +6,9 @@ RUN set -ex\
     && apt update -y \
     && apt upgrade -y \
     && apt install -y wget unzip \
-    && apt install -y shadowsocks-libev\
+    && apt install -y snapd\
     && apt install -y nginx\
+    && snap install shadowsocks-libev\
     && apt autoremove -y
 
 COPY index.html /wwwroot/index.html
